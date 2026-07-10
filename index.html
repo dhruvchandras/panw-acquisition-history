@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palo Alto Networks — Acquisition Timeline</title>
+<meta name="description" content="Interactive left-to-right timeline of every Palo Alto Networks acquisition (2014–2026), grouped by platform, with click-to-expand deal details.">
+<style>
+  :root {
+    --surface-page: #f4f3ef;
+    --surface-card: #fcfcfb;
+    --surface-raised: #ffffff;
+    --ink-primary: #0b0b0b;
+    --ink-secondary: #52514e;
+    --ink-muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --shadow: 0 20px 48px rgba(11,11,11,0.14), 0 2px 8px rgba(11,11,11,0.08);
+    --accent: #2a78d6;
+
+    --cat-network: #2a78d6;
+    --cat-cloud:   #1baf7a;
+    --cat-soc:     #c98500;
+    --cat-ai:      #4a3aa7;
+    --cat-identity:#eb6834;
+
+    --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+
+    --lane-h: 92px;
+    --px-per-month: 42px;
+    --label-col: 210px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-page: #0d0d0d;
+      --surface-card: #1a1a19;
+      --surface-raised: #212120;
+      --ink-primary: #ffffff;
+      --ink-secondary: #c3c2b7;
+      --ink-muted: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --shadow: 0 20px 48px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+      --accent: #3987e5;
+
+      --cat-network: #3987e5;
+      --cat-cloud:   #199e70;
+      --cat-soc:     #eda100;
+      --cat-ai:      #9085e9;
+      --cat-identity:#d95926;
+    }
+  }
+  :root[data-theme="dark"] {
+    --surface-page: #0d0d0d;
+    --surface-card: #1a1a19;
+    --surface-raised: #212120;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --shadow: 0 20px 48px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+    --accent: #3987e5;
+    --cat-network: #3987e5;
+    --cat-cloud:   #199e70;
+    --cat-soc:     #eda100;
+    --cat-ai:      #9085e9;
+    --cat-identity:#d95926;
+  }
+  :root[data-theme="light"] {
+    --surface-page: #f4f3ef;
+    --surface-card: #fcfcfb;
+    --surface-raised: #ffffff;
+    --ink-primary: #0b0b0b;
+    --ink-secondary: #52514e;
+    --ink-muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --shadow: 0 20px 48px rgba(11,11,11,0.14), 0 2px 8px rgba(11,11,11,0.08);
+    --accent: #2a78d6;
+    --cat-network: #2a78d6;
+    --cat-cloud:   #1baf7a;
+    --cat-soc:     #c98500;
+    --cat-ai:      #4a3aa7;
+    --cat-identity:#eb6834;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--surface-page);
+    color: var(--ink-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 1360px; margin: 0 auto; padding: 40px 28px 64px; }
+
+  /* ---------- Header ---------- */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(24px, 3.4vw, 34px);
+    line-height: 1.15;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .subtitle {
+    color: var(--ink-secondary);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 62ch;
+    margin: 0 0 22px;
+  }
+  .stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    min-width: 130px;
+  }
+  .stat .n {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stat .l {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    margin-top: 3px;
+  }
+
+  /* ---------- Legend / filter row ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 13px 7px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    cursor: pointer;
+    transition: opacity .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .chip:hover { border-color: color-mix(in srgb, var(--chip-color) 55%, var(--border)); }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--chip-color); flex: none; }
+  .chip .count { color: var(--ink-muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--chip-color) 14%, var(--surface-card));
+    border-color: color-mix(in srgb, var(--chip-color) 55%, var(--border));
+    color: var(--ink-primary);
+  }
+  .legend[data-active="true"] .chip:not([aria-pressed="true"]) { opacity: .45; }
+
+  /* ---------- Timeline ---------- */
+  .timeline-wrap {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .timeline-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .timeline-grid {
+    position: relative;
+  }
+
+  /* year header */
+  .years {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    height: 34px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--surface-card);
+  }
+  .years .corner {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    width: var(--label-col);
+    flex: none;
+    background: var(--surface-card);
+    border-right: 1px solid var(--hairline);
+  }
+  .years .track { position: relative; flex: none; }
+  .year-tick {
+    position: absolute;
+    top: 0; bottom: 0;
+    border-left: 1px solid var(--hairline);
+    padding-left: 6px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+
+  .lanes { position: relative; }
+  .lane {
+    display: flex;
+    height: var(--lane-h);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .lane:last-child { border-bottom: none; }
+  .lane:nth-of-type(even) .track { background: color-mix(in srgb, var(--ink-primary) 2.5%, transparent); }
+
+  .lane-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    width: var(--label-col);
+    flex: none;
+    background: var(--surface-card);
+    border-right: 1px solid var(--hairline);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+  .lane-label .bar { width: 22px; height: 4px; border-radius: 4px; background: var(--lane-color); margin-bottom: 2px; }
+  .lane-label .name { font-size: 13px; font-weight: 700; letter-spacing: -0.005em; }
+  .lane-label .meta { font-size: 11px; color: var(--ink-muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .track { position: relative; flex: none; }
+
+  .now-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 2px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+    z-index: 1;
+  }
+  .now-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    top: -1px;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+
+  .marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid var(--mk-color);
+    background: var(--mk-color);
+    cursor: pointer;
+    padding: 0;
+    z-index: 2;
+    transition: transform .12s ease, box-shadow .12s ease;
+    box-shadow: 0 0 0 3px var(--surface-card);
+  }
+  .marker.undisclosed {
+    background: color-mix(in srgb, var(--mk-color) 22%, var(--surface-card));
+    border-style: dashed;
+  }
+  .marker:hover, .marker:focus-visible {
+    transform: translate(-50%, -50%) scale(1.28);
+    z-index: 5;
+  }
+  .marker[aria-pressed="true"] {
+    box-shadow: 0 0 0 3px var(--surface-card), 0 0 0 5.5px var(--mk-color);
+  }
+  .marker:focus-visible { outline: 2px solid var(--ink-primary); outline-offset: 3px; }
+  .lane.dim .marker { opacity: .18; }
+
+  /* tooltip */
+  .tip {
+    position: fixed;
+    z-index: 60;
+    pointer-events: none;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 12px;
+    max-width: 220px;
+    opacity: 0;
+    transition: opacity .1s ease;
+  }
+  .tip.show { opacity: 1; }
+  .tip .t-name { font-weight: 700; margin-bottom: 2px; }
+  .tip .t-meta { color: var(--ink-muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+
+  /* ---------- Detail panel ---------- */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(11,11,11,0.38);
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 40;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(420px, 100vw);
+    background: var(--surface-raised);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    z-index: 50;
+    transform: translateX(100%);
+    transition: transform .22s cubic-bezier(.2,.8,.2,1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .panel.open { transform: translateX(0); }
+
+  .panel-head {
+    padding: 22px 22px 16px;
+    border-bottom: 1px solid var(--hairline);
+    position: sticky; top: 0;
+    background: var(--surface-raised);
+  }
+  .panel-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface-card);
+    color: var(--ink-secondary);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .panel-close:hover { color: var(--ink-primary); }
+  .cat-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--pill-color);
+    margin-bottom: 10px;
+  }
+  .cat-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pill-color); }
+  .panel-head h2 { font-size: 21px; margin: 0 0 4px; letter-spacing: -0.01em; padding-right: 30px; text-wrap: balance; }
+  .panel-head .orig-name { font-size: 13px; color: var(--ink-muted); }
+
+  .panel-body { padding: 18px 22px 32px; display: flex; flex-direction: column; gap: 20px; }
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .field .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 700; margin-bottom: 3px; }
+  .field .v { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+  .field .v.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .field.span2 { grid-column: 1 / -1; }
+
+  .prose-block .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 700; margin-bottom: 6px; }
+  .prose-block p { font-size: 13.5px; line-height: 1.55; margin: 0; color: var(--ink-primary); }
+
+  .disclosure-note {
+    font-size: 11.5px; color: var(--ink-muted); line-height: 1.5;
+    border-top: 1px solid var(--hairline); padding-top: 14px;
+  }
+
+  footer {
+    margin-top: 26px;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--hairline);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 720px) {
+    :root { --label-col: 132px; --lane-h: 84px; }
+    .app { padding: 24px 14px 48px; }
+    .panel { width: 100%; top: auto; height: min(84vh, 640px); border-left: none; border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; transform: translateY(100%); }
+    .panel.open { transform: translateY(0); }
+    .field-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marker, .panel, .scrim, .chip, .tip { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <p class="eyebrow">Cybersecurity M&amp;A · 2014 – 2026</p>
+  <h1>Palo Alto Networks — Acquisition Timeline</h1>
+  <p class="subtitle">Every disclosed acquisition PANW has made, plotted by announcement date and grouped by the platform it fed. Click any deal for price, rationale, headcount and revenue at the time of acquisition, and what it was renamed to.</p>
+
+  <div class="stat-row" id="statRow"></div>
+  <div class="legend" id="legend" data-active="false"></div>
+
+  <div class="timeline-wrap">
+    <div class="timeline-scroll" id="scrollArea">
+      <div class="timeline-grid" id="grid"></div>
+    </div>
+  </div>
+
+  <footer>
+    Dates reflect public announcement (deal-signing); completion date shown separately in each detail panel where it differs materially. Prices are headline deal consideration as disclosed in press releases or SEC filings — final purchase consideration (per 10-Q/10-K) is noted where it diverges from the announced figure. Employee counts and standalone revenue at acquisition are rarely disclosed for privately held targets and are marked "Not publicly disclosed" rather than estimated. Compiled from Palo Alto Networks press releases/SEC filings and contemporaneous press coverage as of July 2026.
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelName">
+  <div class="panel-head">
+    <button class="panel-close" id="panelClose" aria-label="Close details">✕</button>
+    <div class="cat-pill" id="panelCat"><span class="dot"></span><span id="panelCatLabel"></span></div>
+    <h2 id="panelName"></h2>
+    <div class="orig-name" id="panelOrig"></div>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<script>
+(function () {
+  const CATEGORIES = [
+    { key: "network",  label: "Network Security & SASE",  color: "var(--cat-network)",  blurb: "Perimeter, branch/SASE and IoT defense — the original Strata platform." },
+    { key: "cloud",     label: "Cloud Security",           color: "var(--cat-cloud)",    blurb: "Cloud posture, workload and data protection consolidated into Prisma Cloud." },
+    { key: "soc",       label: "SOC / Cortex Platform",    color: "var(--cat-soc)",      blurb: "Detection, response, SIEM and observability under the Cortex umbrella." },
+    { key: "ai",        label: "AI Security",              color: "var(--cat-ai)",       blurb: "Securing AI models, agents and infrastructure — Prisma AIRS." },
+    { key: "identity",  label: "Identity Security",        color: "var(--cat-identity)", blurb: "PANW's newest platform pillar, anchored by CyberArk." }
+  ];
+
+  const DEALS = [
+    { id:"morta", name:"Morta Security", category:"network", announced:"2014-01-01", priceLabel:"Undisclosed", priceUSDm:null,
+      rationale:"Bolster network threat-intelligence and detection with a team of former NSA cyber-defense engineers, ahead of PANW's push into advanced threat prevention.",
+      original:"Bay Area startup, founded by ex-NSA engineers, building tools to detect advanced network intrusions.",
+      renamed:"Absorbed into Palo Alto Networks' threat-research group — a predecessor to Unit 42. No standalone product survived.",
+      employees:"Not publicly disclosed (reported as a small founding team)", revenue:"Not publicly disclosed" },
+
+    { id:"cyvera", name:"Cyvera", category:"network", announced:"2014-04-02", priceLabel:"~$200M (reported)", priceUSDm:200,
+      rationale:"Extend threat prevention from the network to the endpoint using exploit-technique blocking rather than signatures.",
+      original:"Tel Aviv-based endpoint exploit-prevention startup, blocking attack techniques rather than known malware signatures.",
+      renamed:"Became Traps, PANW's advanced endpoint protection product — the seed of today's Cortex XDR endpoint agent.",
+      employees:"~80 (reported at signing)", revenue:"Not publicly disclosed" },
+
+    { id:"cirrosecure", name:"CirroSecure", category:"cloud", announced:"2015-05-15", priceLabel:"Undisclosed", priceUSDm:null,
+      rationale:"Gain visibility and control over sensitive data moving through SaaS applications as enterprises adopted cloud apps.",
+      original:"Cloud data-security / CASB startup protecting sensitive data inside SaaS applications.",
+      renamed:"Became Aperture, PANW's first SaaS security service — the earliest lineage of today's Prisma Cloud SaaS security.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" },
+
+    { id:"lightcyber", name:"LightCyber", category:"soc", announced:"2017-03-15", priceLabel:"~$105M (reported)", priceUSDm:105,
+      rationale:"Add behavioral analytics that spot attackers already inside the network, complementing perimeter prevention.",
+      original:"Tel Aviv-based network behavioral-analytics company detecting active in-network attackers via machine learning.",
+      renamed:"Became Magnifier behavioral analytics; its detection engine was later folded into Cortex XDR.",
+      employees:"~80 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"evidentio", name:"Evident.io", category:"cloud", announced:"2018-03-08", priceLabel:"$300M", priceUSDm:300,
+      rationale:"Establish a cloud security posture management (CSPM) foundation as customers shifted workloads to AWS/Azure/GCP.",
+      original:"Cloud security posture management pioneer, offering continuous compliance monitoring for public cloud accounts.",
+      renamed:"Became the CSPM core of Prisma Public Cloud — the direct predecessor of Prisma Cloud.",
+      employees:"~120 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"secdo", name:"Secdo", category:"soc", announced:"2018-04-08", priceLabel:"Undisclosed", priceUSDm:null,
+      rationale:"Add automated endpoint forensics and incident-response workflows to speed up breach investigation.",
+      original:"Israeli endpoint detection & response (EDR) startup automating forensic investigation and incident response.",
+      renamed:"Endpoint forensics/IR automation folded into Traps and, later, Cortex XDR.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" },
+
+    { id:"redlock", name:"RedLock", category:"cloud", announced:"2018-10-01", priceLabel:"$173M", priceUSDm:173,
+      rationale:"Combine cloud threat-defense and compliance monitoring with Evident.io's CSPM to form a single cloud security product.",
+      original:"Cloud threat-defense startup correlating configuration, network and user-activity risk across AWS, Azure and GCP.",
+      renamed:"Merged with Evident.io's technology to become Prisma Cloud.",
+      employees:"~100 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"demisto", name:"Demisto", category:"soc", announced:"2019-02-19", priceLabel:"$560M", priceUSDm:560,
+      rationale:"Add security orchestration, automation and response (SOAR) to turn detections into automated playbook-driven action.",
+      original:"SOAR platform provider, automating incident response with case management and playbooks.",
+      renamed:"Renamed Cortex XSOAR — the automation backbone of the Cortex platform.",
+      employees:"~180 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"twistlock", name:"Twistlock", category:"cloud", announced:"2019-05-29", priceLabel:"$410M", priceUSDm:410,
+      rationale:"Secure the shift to containers and Kubernetes as cloud-native architectures became mainstream.",
+      original:"Container and cloud-native application security pioneer, covering Docker and Kubernetes environments.",
+      renamed:"Became Prisma Cloud Compute Edition.",
+      employees:"~100 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"puresec", name:"PureSec", category:"cloud", announced:"2019-06-04", priceLabel:"$47M (reported)", priceUSDm:47,
+      rationale:"Round out Prisma Cloud's workload coverage with serverless (FaaS) application security.",
+      original:"Serverless application security startup protecting AWS Lambda and Azure Functions workloads.",
+      renamed:"Folded into Prisma Cloud's serverless security module.",
+      employees:"~20 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"zingbox", name:"Zingbox", category:"network", announced:"2019-09-10", priceLabel:"$75M (reported)", priceUSDm:75,
+      rationale:"Extend Strata network security to unmanaged IoT and medical devices using ML-based device fingerprinting.",
+      original:"IoT device-security startup using machine learning to identify and secure unmanaged connected devices.",
+      renamed:"Became IoT Security, part of the Strata network-security portfolio.",
+      employees:"~60 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"aporeto", name:"Aporeto", category:"cloud", announced:"2019-11-12", priceLabel:"$150M", priceUSDm:150,
+      rationale:"Add cloud-native workload identity and microsegmentation that enforces policy independent of IP address.",
+      original:"Cloud-native workload identity and microsegmentation startup for containers and multi-cloud workloads.",
+      renamed:"Integrated into Prisma Cloud's cloud workload protection (CWPP) capabilities.",
+      employees:"~60 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"cloudgenix", name:"CloudGenix", category:"network", announced:"2020-03-02", completed:"2020-04-01", priceLabel:"$420M", priceUSDm:420,
+      rationale:"Acquire an app-defined SD-WAN foundation to build a full secure access service edge (SASE) offering.",
+      original:"SD-WAN pioneer delivering application-defined, autonomous WAN edge connectivity for branch offices.",
+      renamed:"Became Prisma SD-WAN — the on-ramp that grew into Prisma SASE.",
+      employees:"~200 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"crypsis", name:"Crypsis Group", category:"soc", announced:"2020-06-30", completed:"2020-08-03", priceLabel:"$265M", priceUSDm:265,
+      rationale:"Add incident-response and digital-forensics consulting expertise to deepen Unit 42's breach-response practice.",
+      original:"Incident-response, digital-forensics and risk-management consultancy serving breached organizations.",
+      renamed:"Merged into Unit 42, PANW's threat-intelligence and incident-response consulting arm.",
+      employees:"~260 consultants (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"expanse", name:"Expanse", category:"soc", announced:"2020-11-11", completed:"2020-12-15", priceLabel:"$800M headline", priceFinal:"$797.2M final consideration", priceUSDm:800,
+      rationale:"Give customers an attacker's-eye view of their internet-facing footprint, feeding Cortex with external attack-surface data.",
+      original:"External attack-surface management (ASM) company mapping internet-facing assets visible to attackers.",
+      renamed:"Became Cortex Xpanse.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" },
+
+    { id:"bridgecrew", name:"Bridgecrew", category:"cloud", announced:"2021-02-03", priceLabel:"$156M", priceUSDm:156,
+      rationale:"Push cloud security 'shift-left' into infrastructure-as-code, catching misconfigurations before deployment.",
+      original:"Infrastructure-as-code security startup behind the open-source scanner Checkov.",
+      renamed:"Integrated into Prisma Cloud as its IaC / shift-left security module.",
+      employees:"~50 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"cider", name:"Cider Security", category:"cloud", announced:"2022-11-17", completed:"2022-12-20", priceLabel:"$250M headline", priceFinal:"$198.3M final consideration", priceUSDm:250,
+      rationale:"Secure the CI/CD pipeline and software supply chain as a growing source of breaches, feeding both Prisma Cloud and Cortex.",
+      original:"Software supply-chain and CI/CD pipeline security startup.",
+      renamed:"Folded into Prisma Cloud's application/supply-chain security capabilities.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" },
+
+    { id:"dig", name:"Dig Security", category:"cloud", announced:"2023-10-24", completed:"2023-12-05", priceLabel:"$255.4M", priceUSDm:255.4,
+      rationale:"Add data security posture management (DSPM) so Prisma Cloud can classify and protect sensitive data across multi-cloud stores.",
+      original:"Data security posture management (DSPM) startup for multi-cloud data stores.",
+      renamed:"Became Prisma Cloud's Data Security Posture Management module.",
+      employees:"~80 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"talon", name:"Talon Cyber Security", category:"network", announced:"2023-11-15", priceLabel:"$625M (reported)", priceUSDm:625,
+      rationale:"Deliver zero-trust access to SaaS and web apps from any device via a secure enterprise browser, extending Prisma SASE.",
+      original:"Enterprise browser startup delivering secure, zero-trust access to SaaS and web applications.",
+      renamed:"Became Prisma Access Browser within Prisma SASE.",
+      employees:"~90 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"qradar", name:"IBM QRadar SaaS assets", category:"soc", announced:"2024-07-08", completed:"2024-08-31", priceLabel:"$1.1B total", priceFinal:"$500M cash + $648.9M contingent consideration", priceUSDm:1100,
+      rationale:"Acquire IBM's QRadar SaaS customer base and migrate it to Cortex XSIAM, rapidly scaling PANW's next-gen SIEM footprint.",
+      original:"Not a company acquisition — IBM's QRadar SaaS intellectual property, customer contracts and relationships (asset purchase).",
+      renamed:"QRadar SaaS customers were migrated onto Cortex XSIAM.",
+      employees:"N/A — asset and customer-contract purchase, not a talent acquisition", revenue:"N/A — not reported as standalone revenue" },
+
+    { id:"protectai", name:"Protect AI", category:"ai", announced:"2025-04-15", completed:"2025-07-22", priceLabel:"$700M headline", priceFinal:"$634.5M final consideration", priceUSDm:700,
+      rationale:"Secure the AI development lifecycle — models, pipelines and ML supply chain — as enterprises rapidly adopted AI.",
+      original:"AI/ML security startup building MLSecOps tooling to secure AI models, pipelines and supply chains.",
+      renamed:"Became the foundation of Prisma AIRS (AI Runtime Security).",
+      employees:"~90 (reported)", revenue:"Not publicly disclosed" },
+
+    { id:"cyberark", name:"CyberArk", category:"identity", announced:"2025-07-30", completed:"2026-02-11", priceLabel:"~$25B", priceFinal:"Cash + stock; largest deal in cybersecurity industry history", priceUSDm:25000,
+      rationale:"Make identity a core platform pillar alongside network, cloud and SOC — privileged access is central to modern (and AI agent) breaches.",
+      original:"Publicly traded (NASDAQ: CYBR) identity-security leader in privileged access management and secrets management.",
+      renamed:"Anchors PANW's new Identity Security platform pillar; the CyberArk brand is retained as a product line.",
+      employees:"~3,800 (FY2024, public filings, incl. prior Venafi acquisition)", revenue:"$1.001B FY2024 revenue, +33% YoY (public financials — last full reported year before the deal)" },
+
+    { id:"chronosphere", name:"Chronosphere", category:"soc", announced:"2025-11-19", completed:"2026-01-29", priceLabel:"$3.35B headline", priceFinal:"~$3.0B final purchase consideration", priceUSDm:3350,
+      rationale:"Add next-generation, cost-efficient observability to Cortex as AI-driven infrastructure scales telemetry volumes.",
+      original:"Cloud-native observability platform (metrics, logs, traces) built by former Uber engineers; competes with Datadog.",
+      renamed:"Being integrated into the Cortex platform as PANW's observability offering.",
+      employees:"~300 (reported)", revenue:">$160M ARR (reported, Sep 2025)" },
+
+    { id:"koi", name:"Koi Security", category:"ai", announced:"2026-02-16", completed:"2026-04-14", priceLabel:"$300M headline", priceFinal:"$231M final consideration", priceUSDm:300,
+      rationale:"Secure the 'agentic endpoint' — browser extensions, AI agents and software supply chains — extending Prisma AIRS.",
+      original:"Agentic/endpoint posture-management startup securing browser extensions, AI agents and software supply chains.",
+      renamed:"Being integrated into Prisma AIRS / Cortex to secure the agentic endpoint.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" },
+
+    { id:"portkey", name:"Portkey", category:"ai", announced:"2026-06-15", priceLabel:"Undisclosed", priceUSDm:null,
+      rationale:"Add an AI gateway for routing, observability and governance as enterprises run more LLM traffic through production systems.",
+      original:"AI gateway startup providing LLM routing, observability and governance for AI applications.",
+      renamed:"Being integrated into Prisma AIRS' AI gateway and governance capabilities.",
+      employees:"Not publicly disclosed", revenue:"Not publicly disclosed" }
+  ];
+
+  // ---------- Date / layout helpers ----------
+  const START = { y: 2014, m: 0 };   // Jan 2014
+  const END   = { y: 2026, m: 11 };  // Dec 2026 (padding beyond "today")
+  const NOW = new Date("2026-07-09");
+
+  function monthIndex(dateStr) {
+    const [y, m] = dateStr.split("-").map(Number);
+    return (y - START.y) * 12 + (m - 1);
+  }
+  const totalMonths = (END.y - START.y) * 12 + END.m + 1;
+  const pxPerMonth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--px-per-month")) || 42;
+  const trackWidth = totalMonths * pxPerMonth;
+
+  function xFor(dateStr) { return monthIndex(dateStr) * pxPerMonth + pxPerMonth / 2; }
+  function fmtDate(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  }
+  function fmtMonth(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  }
+  function radiusFor(v) {
+    if (!v) return 7;
+    return Math.max(8, Math.min(26, 6 + 4 * Math.log10(v + 1)));
+  }
+  const catMap = Object.fromEntries(CATEGORIES.map(c => [c.key, c]));
+
+  // ---------- Stat row ----------
+  const disclosed = DEALS.filter(d => d.priceUSDm);
+  const totalDisclosedM = disclosed.reduce((s, d) => s + d.priceUSDm, 0);
+  const statRow = document.getElementById("statRow");
+  const stats = [
+    { n: DEALS.length, l: "Acquisitions tracked" },
+    { n: "2014–2026", l: "Span" },
+    { n: "$" + (totalDisclosedM / 1000).toFixed(1) + "B+", l: "Disclosed deal value" },
+    { n: disclosed.length + "/" + DEALS.length, l: "Deals with disclosed price" }
+  ];
+  statRow.innerHTML = stats.map(s => `<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join("");
+
+  // ---------- Legend ----------
+  const legendEl = document.getElementById("legend");
+  let activeFilter = null;
+  function renderLegend() {
+    legendEl.innerHTML = CATEGORIES.map(c => {
+      const count = DEALS.filter(d => d.category === c.key).length;
+      const pressed = activeFilter === c.key;
+      return `<button class="chip" data-cat="${c.key}" style="--chip-color:${c.color}" aria-pressed="${pressed}">
+        <span class="dot"></span>${c.label} <span class="count">${count}</span>
+      </button>`;
+    }).join("");
+    legendEl.dataset.active = activeFilter ? "true" : "false";
+  }
+  renderLegend();
+  legendEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    const key = btn.dataset.cat;
+    activeFilter = activeFilter === key ? null : key;
+    renderLegend();
+    applyFilter();
+  });
+
+  // ---------- Build timeline grid ----------
+  const grid = document.getElementById("grid");
+
+  // years header
+  const years = document.createElement("div");
+  years.className = "years";
+  years.innerHTML = `<div class="corner"></div><div class="track" style="width:${trackWidth}px"></div>`;
+  const yearsTrack = years.querySelector(".track");
+  for (let y = START.y; y <= END.y; y++) {
+    const tick = document.createElement("div");
+    tick.className = "year-tick";
+    tick.style.left = (monthIndex(y + "-01") * pxPerMonth) + "px";
+    tick.textContent = y;
+    yearsTrack.appendChild(tick);
+  }
+  grid.appendChild(years);
+
+  // lanes
+  const lanesEl = document.createElement("div");
+  lanesEl.className = "lanes";
+
+  CATEGORIES.forEach(cat => {
+    const lane = document.createElement("div");
+    lane.className = "lane";
+    lane.dataset.cat = cat.key;
+
+    const label = document.createElement("div");
+    label.className = "lane-label";
+    label.style.setProperty("--lane-color", cat.color);
+    const count = DEALS.filter(d => d.category === cat.key).length;
+    label.innerHTML = `<div class="bar"></div><div class="name">${cat.label}</div><div class="meta">${count} deal${count === 1 ? "" : "s"}</div>`;
+    lane.appendChild(label);
+
+    const track = document.createElement("div");
+    track.className = "track";
+    track.style.width = trackWidth + "px";
+
+    // now line (only draw once, but harmless per-lane; keep to soc lane only to avoid clutter)
+    if (cat.key === CATEGORIES[0].key) {
+      // placeholder, now-line added globally below
+    }
+
+    DEALS.filter(d => d.category === cat.key).forEach(deal => {
+      const r = radiusFor(deal.priceUSDm);
+      const btn = document.createElement("button");
+      btn.className = "marker" + (deal.priceUSDm ? "" : " undisclosed");
+      btn.style.setProperty("--mk-color", cat.color);
+      btn.style.width = (r * 2) + "px";
+      btn.style.height = (r * 2) + "px";
+      btn.style.left = xFor(deal.announced) + "px";
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", `${deal.name}, ${fmtMonth(deal.announced)}, ${deal.priceLabel}`);
+      btn.dataset.id = deal.id;
+      track.appendChild(btn);
+    });
+
+    lane.appendChild(track);
+    lanesEl.appendChild(lane);
+  });
+  grid.appendChild(lanesEl);
+
+  // now-line, spans full lanes height — append to grid as an overlay positioned via left col offset
+  const nowWrap = document.createElement("div");
+  nowWrap.style.position = "absolute";
+  nowWrap.style.top = "34px";
+  nowWrap.style.bottom = "0";
+  nowWrap.style.left = "calc(var(--label-col) + " + xFor(NOW.toISOString().slice(0,10)) + "px)";
+  nowWrap.style.pointerEvents = "none";
+  nowWrap.innerHTML = `<div class="now-line"></div><div class="now-label" style="left:4px; top:-30px;">TODAY</div>`;
+  grid.style.position = "relative";
+  grid.appendChild(nowWrap);
+
+  function applyFilter() {
+    document.querySelectorAll(".lane").forEach(lane => {
+      lane.classList.toggle("dim", !!activeFilter && lane.dataset.cat !== activeFilter);
+    });
+  }
+
+  // ---------- Tooltip ----------
+  const tip = document.createElement("div");
+  tip.className = "tip";
+  document.body.appendChild(tip);
+
+  function showTip(deal, x, y) {
+    tip.innerHTML = `<div class="t-name">${deal.name}</div><div class="t-meta">${fmtMonth(deal.announced)} · ${deal.priceLabel}</div>`;
+    tip.style.left = Math.min(x + 14, window.innerWidth - 240) + "px";
+    tip.style.top = Math.max(y - 14, 8) + "px";
+    tip.classList.add("show");
+  }
+  function hideTip() { tip.classList.remove("show"); }
+
+  grid.addEventListener("mouseover", (e) => {
+    const m = e.target.closest(".marker");
+    if (!m) return;
+    const deal = DEALS.find(d => d.id === m.dataset.id);
+    const rect = m.getBoundingClientRect();
+    showTip(deal, rect.right, rect.top);
+  });
+  grid.addEventListener("mouseout", (e) => {
+    if (e.target.closest(".marker")) hideTip();
+  });
+  grid.addEventListener("focusin", (e) => {
+    const m = e.target.closest(".marker");
+    if (!m) return;
+    const deal = DEALS.find(d => d.id === m.dataset.id);
+    const rect = m.getBoundingClientRect();
+    showTip(deal, rect.right, rect.top);
+  });
+  grid.addEventListener("focusout", (e) => { if (e.target.closest(".marker")) hideTip(); });
+
+  // ---------- Detail panel ----------
+  const scrim = document.getElementById("scrim");
+  const panel = document.getElementById("panel");
+  const panelClose = document.getElementById("panelClose");
+  const panelCat = document.getElementById("panelCat");
+  const panelCatLabel = document.getElementById("panelCatLabel");
+  const panelName = document.getElementById("panelName");
+  const panelOrig = document.getElementById("panelOrig");
+  const panelBody = document.getElementById("panelBody");
+  let lastFocused = null;
+  let activeMarkerId = null;
+
+  function field(k, v, opts) {
+    opts = opts || {};
+    return `<div class="field${opts.span ? " span2" : ""}"><div class="k">${k}</div><div class="v${opts.num ? " num" : ""}">${v}</div></div>`;
+  }
+  function prose(k, v) {
+    return `<div class="prose-block"><div class="k">${k}</div><p>${v}</p></div>`;
+  }
+
+  function openPanel(deal) {
+    const cat = catMap[deal.category];
+    panelCat.style.setProperty("--pill-color", cat.color);
+    panelCatLabel.textContent = cat.label;
+    panelName.textContent = deal.name;
+    panelOrig.textContent = "";
+
+    let dateField = fmtDate(deal.announced) + " (announced)";
+    if (deal.completed) dateField += `<br><span style="color:var(--ink-muted); font-weight:500;">${fmtDate(deal.completed)} (completed)</span>`;
+
+    let priceField = deal.priceLabel;
+    if (deal.priceFinal) priceField += `<br><span style="color:var(--ink-muted); font-weight:500;">${deal.priceFinal}</span>`;
+
+    panelBody.innerHTML = [
+      `<div class="field-grid">`,
+        field("Acquisition date", dateField),
+        field("Deal value", priceField, { num: true }),
+        field("Employees at acquisition", deal.employees, { span: true }),
+        field("Revenue at acquisition", deal.revenue, { span: true }),
+      `</div>`,
+      prose("Original company", deal.original),
+      prose("Strategic rationale", deal.rationale),
+      prose("Renamed / integrated as", deal.renamed),
+      `<div class="disclosure-note">Fields marked "Not publicly disclosed" reflect an absence of a credible public figure, not zero — most targets here were privately held and did not report standalone financials or headcount.</div>`
+    ].join("");
+
+    document.querySelectorAll(".marker[aria-pressed='true']").forEach(m => m.setAttribute("aria-pressed", "false"));
+    const activeMarker = grid.querySelector(`.marker[data-id="${deal.id}"]`);
+    if (activeMarker) activeMarker.setAttribute("aria-pressed", "true");
+    activeMarkerId = deal.id;
+
+    scrim.classList.add("open");
+    panel.classList.add("open");
+    panelClose.focus();
+  }
+
+  function closePanel() {
+    scrim.classList.remove("open");
+    panel.classList.remove("open");
+    document.querySelectorAll(".marker[aria-pressed='true']").forEach(m => m.setAttribute("aria-pressed", "false"));
+    activeMarkerId = null;
+    if (lastFocused) lastFocused.focus();
+  }
+
+  grid.addEventListener("click", (e) => {
+    const m = e.target.closest(".marker");
+    if (!m) return;
+    lastFocused = m;
+    const deal = DEALS.find(d => d.id === m.dataset.id);
+    openPanel(deal);
+  });
+  grid.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("marker")) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
+  panelClose.addEventListener("click", closePanel);
+  scrim.addEventListener("click", closePanel);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.classList.contains("open")) closePanel();
+  });
+
+  // scroll timeline roughly to "today" on load
+  const scrollArea = document.getElementById("scrollArea");
+  requestAnimationFrame(() => {
+    scrollArea.scrollLeft = Math.max(0, xFor("2019-01-01") - 40);
+  });
+})();
+</script>
+</body>
+</html>
