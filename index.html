@@ -180,39 +180,59 @@
 
   /* ---------- Timeline ---------- */
   .timeline-wrap {
+    display: flex;
+    align-items: stretch;
     background: var(--surface-card);
     border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
   }
+
+  /* frozen first column — lives outside the scroll container entirely,
+     so it can never be carried away by horizontal scroll/pan */
+  .label-rail {
+    flex: none;
+    width: var(--label-col);
+    background: var(--surface-card);
+    border-right: 1px solid var(--hairline);
+  }
+  .rail-spacer { height: 34px; border-bottom: 1px solid var(--hairline); }
+  .lane-label {
+    height: var(--lane-h);
+    border-bottom: 1px solid var(--hairline);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+  .lane-label:last-child { border-bottom: none; }
+  .lane-label .bar { width: 22px; height: 4px; border-radius: 4px; background: var(--lane-color); margin-bottom: 2px; }
+  .lane-label .name { font-size: 13px; font-weight: 700; letter-spacing: -0.005em; }
+  .lane-label .meta { font-size: 11px; color: var(--ink-muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
   .timeline-scroll {
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
   }
+  .timeline-scroll.panning { cursor: grabbing; }
   .timeline-grid {
     position: relative;
   }
 
   /* year header */
   .years {
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    display: flex;
     height: 34px;
     border-bottom: 1px solid var(--hairline);
     background: var(--surface-card);
+    position: relative;
   }
-  .years .corner {
-    position: sticky;
-    left: 0;
-    z-index: 4;
-    width: var(--label-col);
-    flex: none;
-    background: var(--surface-card);
-    border-right: 1px solid var(--hairline);
-  }
-  .years .track { position: relative; flex: none; }
+  .years .track { position: relative; height: 100%; }
   .year-tick {
     position: absolute;
     top: 0; bottom: 0;
@@ -229,32 +249,14 @@
 
   .lanes { position: relative; }
   .lane {
-    display: flex;
+    position: relative;
     height: var(--lane-h);
     border-bottom: 1px solid var(--hairline);
   }
   .lane:last-child { border-bottom: none; }
   .lane:nth-of-type(even) .track { background: color-mix(in srgb, var(--ink-primary) 2.5%, transparent); }
 
-  .lane-label {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    width: var(--label-col);
-    flex: none;
-    background: var(--surface-card);
-    border-right: 1px solid var(--hairline);
-    padding: 12px 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-  }
-  .lane-label .bar { width: 22px; height: 4px; border-radius: 4px; background: var(--lane-color); margin-bottom: 2px; }
-  .lane-label .name { font-size: 13px; font-weight: 700; letter-spacing: -0.005em; }
-  .lane-label .meta { font-size: 11px; color: var(--ink-muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-  .track { position: relative; flex: none; }
+  .track { position: relative; height: 100%; }
 
   .now-line {
     position: absolute;
@@ -426,6 +428,7 @@
   <div class="legend" id="legend" data-active="false"></div>
 
   <div class="timeline-wrap">
+    <div class="label-rail" id="labelRail"></div>
     <div class="timeline-scroll" id="scrollArea">
       <div class="timeline-grid" id="grid"></div>
     </div>
@@ -672,13 +675,28 @@
     applyFilter();
   });
 
-  // ---------- Build timeline grid ----------
+  // ---------- Build frozen label rail (lives outside the scroll container) ----------
+  const labelRail = document.getElementById("labelRail");
+  const railSpacer = document.createElement("div");
+  railSpacer.className = "rail-spacer";
+  labelRail.appendChild(railSpacer);
+
+  CATEGORIES.forEach(cat => {
+    const label = document.createElement("div");
+    label.className = "lane-label";
+    label.style.setProperty("--lane-color", cat.color);
+    const count = DEALS.filter(d => d.category === cat.key).length;
+    label.innerHTML = `<div class="bar"></div><div class="name">${cat.label}</div><div class="meta">${count} deal${count === 1 ? "" : "s"}</div>`;
+    labelRail.appendChild(label);
+  });
+
+  // ---------- Build timeline grid (scrollable) ----------
   const grid = document.getElementById("grid");
 
   // years header
   const years = document.createElement("div");
   years.className = "years";
-  years.innerHTML = `<div class="corner"></div><div class="track" style="width:${trackWidth}px"></div>`;
+  years.innerHTML = `<div class="track" style="width:${trackWidth}px"></div>`;
   const yearsTrack = years.querySelector(".track");
   for (let y = START.y; y <= END.y; y++) {
     const tick = document.createElement("div");
@@ -698,21 +716,9 @@
     lane.className = "lane";
     lane.dataset.cat = cat.key;
 
-    const label = document.createElement("div");
-    label.className = "lane-label";
-    label.style.setProperty("--lane-color", cat.color);
-    const count = DEALS.filter(d => d.category === cat.key).length;
-    label.innerHTML = `<div class="bar"></div><div class="name">${cat.label}</div><div class="meta">${count} deal${count === 1 ? "" : "s"}</div>`;
-    lane.appendChild(label);
-
     const track = document.createElement("div");
     track.className = "track";
     track.style.width = trackWidth + "px";
-
-    // now line (only draw once, but harmless per-lane; keep to soc lane only to avoid clutter)
-    if (cat.key === CATEGORIES[0].key) {
-      // placeholder, now-line added globally below
-    }
 
     DEALS.filter(d => d.category === cat.key).forEach(deal => {
       const r = radiusFor(deal.priceUSDm);
@@ -738,7 +744,7 @@
   nowWrap.style.position = "absolute";
   nowWrap.style.top = "34px";
   nowWrap.style.bottom = "0";
-  nowWrap.style.left = "calc(var(--label-col) + " + xFor(NOW.toISOString().slice(0,10)) + "px)";
+  nowWrap.style.left = xFor(NOW.toISOString().slice(0,10)) + "px";
   nowWrap.style.pointerEvents = "none";
   nowWrap.innerHTML = `<div class="now-line"></div><div class="now-label" style="left:4px; top:-30px;">TODAY</div>`;
   grid.style.position = "relative";
@@ -866,8 +872,55 @@
     if (e.key === "Escape" && panel.classList.contains("open")) closePanel();
   });
 
-  // scroll timeline roughly to "today" on load
+  // ---------- Hand tool: click-and-drag panning (mouse only; touch keeps native scroll) ----------
   const scrollArea = document.getElementById("scrollArea");
+  let isPanning = false;
+  let didDrag = false;
+  let panStartX = 0;
+  let panStartScrollLeft = 0;
+
+  scrollArea.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    isPanning = true;
+    didDrag = false;
+    panStartX = e.clientX;
+    panStartScrollLeft = scrollArea.scrollLeft;
+    // Deliberately do NOT capture the pointer yet — capturing on a plain click
+    // (even with zero movement) makes Chromium retarget the subsequent "click"
+    // event to scrollArea instead of the marker button under the cursor, which
+    // silently breaks click-to-open. Capture only kicks in once we know it's a drag.
+  });
+
+  scrollArea.addEventListener("pointermove", (e) => {
+    if (!isPanning) return;
+    const dx = e.clientX - panStartX;
+    if (!didDrag && Math.abs(dx) > 4) {
+      didDrag = true;
+      scrollArea.classList.add("panning");
+      scrollArea.setPointerCapture(e.pointerId);
+    }
+    if (didDrag) scrollArea.scrollLeft = panStartScrollLeft - dx;
+  });
+
+  function endPan(e) {
+    if (!isPanning) return;
+    isPanning = false;
+    scrollArea.classList.remove("panning");
+    try { scrollArea.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  scrollArea.addEventListener("pointerup", endPan);
+  scrollArea.addEventListener("pointercancel", endPan);
+
+  // swallow the click that would otherwise fire on whatever marker the drag ended over
+  scrollArea.addEventListener("click", (e) => {
+    if (didDrag) {
+      e.stopPropagation();
+      e.preventDefault();
+      didDrag = false;
+    }
+  }, true);
+
+  // scroll timeline roughly to "today" on load
   requestAnimationFrame(() => {
     scrollArea.scrollLeft = Math.max(0, xFor("2019-01-01") - 40);
   });
